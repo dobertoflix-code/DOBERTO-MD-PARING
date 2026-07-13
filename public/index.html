@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ht">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOBERTO MD - Pairing</title>
+<style>
+  :root { --bg:#0B0D12; --card:#12151C; --gold:#F2C26B; --text:#F5F5F5; --muted:#8A8F98; }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:var(--bg); color:var(--text);
+    font-family:'Segoe UI', Roboto, Arial, sans-serif;
+    padding:24px;
+  }
+  .card {
+    background:var(--card); border:1px solid rgba(242,194,107,0.15);
+    border-radius:16px; padding:32px 28px; width:100%; max-width:400px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  }
+  h1 { font-size:20px; margin:0 0 4px; letter-spacing:0.5px; }
+  .brand { color:var(--gold); }
+  p.sub { color:var(--muted); font-size:13px; margin:0 0 24px; }
+  label { font-size:13px; color:var(--muted); display:block; margin-bottom:6px; }
+  input {
+    width:100%; padding:14px; border-radius:10px; border:1px solid #262A33;
+    background:#0F1218; color:var(--text); font-size:16px; margin-bottom:16px;
+  }
+  input:focus { outline:none; border-color:var(--gold); }
+  button {
+    width:100%; padding:14px; border:none; border-radius:10px;
+    background:var(--gold); color:#12151C; font-weight:700; font-size:15px;
+    cursor:pointer;
+  }
+  button:disabled { opacity:0.6; cursor:not-allowed; }
+  #result { margin-top:20px; text-align:center; }
+  .code {
+    font-size:28px; font-weight:800; letter-spacing:3px; color:var(--gold);
+    background:#0F1218; padding:14px; border-radius:10px; margin-top:10px;
+    word-break:break-all;
+  }
+  .error { color:#FF6B6B; font-size:13px; margin-top:14px; text-align:center; }
+  .hint { color:var(--muted); font-size:12px; margin-top:14px; text-align:center; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>DOBERTO <span class="brand">MD</span></h1>
+    <p class="sub">Konekte WhatsApp ou ak bot la — pa bezwen Telegram</p>
+
+    <label for="num">Nimewo WhatsApp (san +, san 0 devan)</label>
+    <input id="num" type="tel" placeholder="509xxxxxxxx" inputmode="numeric">
+    <button id="btn" onclick="pair()">Jenere kòd pairing</button>
+
+    <div id="result"></div>
+    <div class="hint">Apre w resevwa kòd la, mete l nan WhatsApp: Aparèy Konekte → Konekte ak nimewo telefòn</div>
+  </div>
+
+<script>
+async function pair() {
+  const num = document.getElementById('num').value.trim();
+  const btn = document.getElementById('btn');
+  const result = document.getElementById('result');
+  result.innerHTML = '';
+
+  if (!num) {
+    result.innerHTML = '<div class="error">Antre yon nimewo dabò.</div>';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Ap jenere kòd...';
+
+  try {
+    const res = await fetch('/api/pair', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ number: num })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      result.innerHTML = '<div class="code">' + data.code + '</div>';
+    } else {
+      result.innerHTML = '<div class="error">' + data.error + '</div>';
+    }
+  } catch (e) {
+    result.innerHTML = '<div class="error">Yon erè rive. Eseye ankò.</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Jenere kòd pairing';
+  }
+}
+</script>
+</body>
+</html>
