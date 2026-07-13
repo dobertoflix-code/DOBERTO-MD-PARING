@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ht">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOBERTO MD — Konekte san Telegram</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@500;600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0D12;
+    --surface: #12151C;
+    --surface-raised: #171B24;
+    --line: rgba(242,194,107,0.14);
+    --gold: #F2C26B;
+    --gold-dim: #C79A4E;
+    --signal: #3B6FC9;
+    --text: #F5F5F5;
+    --muted: #8892A0;
+    --good: #4ADE80;
+    --bad: #FF6B6B;
+  }
+
+  * { box-sizing: border-box; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse 800px 500px at 50% -10%, rgba(59,111,201,0.14), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'Work Sans', system-ui, sans-serif;
+    padding: 28px 20px;
+  }
+
+  .wrap { width: 100%; max-width: 400px; }
+
+  /* ---- signature: konekte / signal pulse ---- */
+  .signal {
+    position: relative;
+    width: 100%;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+  .signal .ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px solid var(--gold);
+    opacity: 0;
+    animation: pulse-out 2.8s ease-out infinite;
+  }
+  .signal .ring:nth-child(1) { width: 40px; height: 40px; animation-delay: 0s; }
+  .signal .ring:nth-child(2) { width: 40px; height: 40px; animation-delay: 0.9s; }
+  .signal .ring:nth-child(3) { width: 40px; height: 40px; animation-delay: 1.8s; }
+  @keyframes pulse-out {
+    0%   { width: 40px; height: 40px; opacity: 0.9; border-color: var(--gold); }
+    70%  { opacity: 0; }
+    100% { width: 220px; height: 220px; opacity: 0; }
+  }
+  .signal .core {
+    position: relative;
+    z-index: 2;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(160deg, var(--gold), var(--gold-dim));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 24px rgba(242,194,107,0.35);
+  }
+  .signal .core svg { width: 20px; height: 20px; }
+  .signal.linked .ring { animation: none; opacity: 0; }
+  .signal.linked .core {
+    background: linear-gradient(160deg, var(--good), #2fae63);
+    box-shadow: 0 0 24px rgba(74,222,128,0.4);
+  }
+
+  h1 {
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    font-size: 26px;
+    letter-spacing: 0.5px;
+    margin: 0 0 2px;
+    text-align: center;
+    color: var(--text);
+  }
+  h1 span { color: var(--gold); }
+
+  p.sub {
+    color: var(--muted);
+    font-size: 13.5px;
+    margin: 0 0 12px;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  p.count {
+    text-align: center;
+    font-size: 12px;
+    color: var(--gold-dim);
+    margin: 0 0 22px;
+    letter-spacing: 0.3px;
+    min-height: 16px;
+  }
+  p.count b { color: var(--gold); font-family: 'IBM Plex Mono', monospace; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 26px 24px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+  }
+
+  label {
+    font-size: 12.5px;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    background: var(--surface-raised);
+    border: 1px solid #262A33;
+    border-radius: 12px;
+    padding: 0 14px;
+    margin-bottom: 18px;
+    transition: border-color 0.15s ease;
+  }
+  .input-row:focus-within { border-color: var(--gold); }
+  .input-row .cc {
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    padding-right: 8px;
+    border-right: 1px solid #262A33;
+    margin-right: 10px;
+  }
+  input {
+    flex: 1;
+    width: 100%;
+    padding: 14px 0;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+  }
+  input:focus { outline: none; }
+  input::placeholder { color: #4B5160; }
+
+  button.primary {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    background: var(--gold);
+    color: #14100A;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: transform 0.1s ease, opacity 0.15s ease;
+  }
+  button.primary:active { transform: scale(0.98); }
+  button.primary:disabled { opacity: 0.55; cursor: not-allowed; }
+  button.primary:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+  #result { margin-top: 20px; }
+
+  .stub {
+    border: 1px dashed var(--gold-dim);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    background: repeating-linear-gradient(135deg, rgba(242,194,107,0.04) 0 10px, transparent 10px 20px);
+  }
+  .stub .label {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .stub .code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: var(--gold);
+    word-break: break-all;
+  }
+  .copy-btn {
+    margin-top: 12px;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12.5px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Work Sans', sans-serif;
+  }
+  .copy-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  .error {
+    color: var(--bad);
+    font-size: 13px;
+    text-align: center;
+    padding: 12px;
+    background: rgba(255,107,107,0.08);
+    border: 1px solid rgba(255,107,107,0.25);
+    border-radius: 10px;
+  }
+
+  .hint {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 18px;
+    text-align: center;
+    line-height: 1.6;
+  }
+  .hint b { color: #B9BFC9; font-weight: 600; }
+
+  footer {
+    text-align: center;
+    margin-top: 22px;
+    color: #4B5160;
+    font-size: 11.5px;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <div class="signal" id="signal">
+      <div class="ring"></div>
+      <div class="ring"></div>
+      <div class="ring"></div>
+      <div class="core">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 20a1.4 1.4 0 100-2.8 1.4 1.4 0 000 2.8zM8.5 14.5a5 5 0 017 0M5.5 11.5a9 9 0 0113 0" stroke="#14100A" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <h1>DOBERTO <span>MD</span></h1>
+    <p class="sub">Konekte WhatsApp ou ak bot la — pa bezwen Telegram</p>
+    <p class="count" id="count"></p>
+
+    <div class="card">
+      <label for="num">Nimewo WhatsApp</label>
+      <div class="input-row">
+        <span class="cc">+</span>
+        <input id="num" type="tel" placeholder="509xxxxxxxx (san 0 devan)" inputmode="numeric">
+      </div>
+      <button class="primary" id="btn" onclick="pair()">Jenere kòd pairing</button>
+
+      <div id="result"></div>
+
+      <div class="hint">Mete kòd la nan WhatsApp: <b>Aparèy Konekte → Konekte ak nimewo telefòn</b></div>
+    </div>
+
+    <footer>DOBERTO MD · pairing san Telegram</footer>
+  </div>
+
+<script>
+async function loadCount() {
+  const el = document.getElementById('count');
+  try {
+    const res = await fetch('/api/stats');
+    const data = await res.json();
+    if (data.success) {
+      el.innerHTML = '<b>' + data.count + '</b> moun konekte sou bot la';
+    }
+  } catch (e) {
+    // san grav — jis kite badge a vid si estatistik pa disponib
+  }
+}
+loadCount();
+
+async function pair() {
+  const num = document.getElementById('num').value.trim();
+  const btn = document.getElementById('btn');
+  const result = document.getElementById('result');
+  const signal = document.getElementById('signal');
+  result.innerHTML = '';
+
+  if (!num) {
+    result.innerHTML = '<div class="error">Antre yon nimewo dabò.</div>';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Ap chèche koneksyon...';
+
+  try {
+    const res = await fetch('/api/pair', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ number: num })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      signal.classList.add('linked');
+      result.innerHTML = `
+        <div class="stub">
+          <div class="label">Kòd pairing</div>
+          <div class="code" id="codeText">${data.code}</div>
+          <button class="copy-btn" onclick="copyCode()">Kopye kòd la</button>
+        </div>`;
+      loadCount();
+    } else {
+      result.innerHTML = '<div class="error">' + data.error + '</div>';
+    }
+  } catch (e) {
+    result.innerHTML = '<div class="error">Yon erè rive. Eseye ankò.</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Jenere kòd pairing';
+  }
+}
+
+function copyCode() {
+  const codeEl = document.getElementById('codeText');
+  if (!codeEl) return;
+  navigator.clipboard.writeText(codeEl.textContent.trim()).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    const original = btn.textContent;
+    btn.textContent = 'Kopye ✓';
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  });
+}
+</script>
+</body>
+</html>
