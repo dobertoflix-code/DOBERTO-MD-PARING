@@ -265,30 +265,40 @@
   }
 
   .server-picker{ margin-bottom: 20px; }
-  .server-list{ display:flex; flex-direction:column; gap:8px; }
-  .server-opt{
-    display:flex; align-items:center; justify-content:space-between;
+  .select-row{
+    position:relative;
     background: var(--surface-raised);
     border: 1px solid #262A33;
     border-radius: 10px;
-    padding: 12px 14px;
-    cursor:pointer;
     transition: border-color .15s ease, box-shadow .15s ease;
-    font-family:'IBM Plex Mono', monospace;
   }
-  .server-opt:hover{ border-color: var(--gold-dim); }
-  .server-opt.selected{
+  .select-row:focus-within{
     border-color: var(--gold);
     box-shadow: 0 0 0 3px rgba(242,194,107,0.14);
   }
-  .server-opt.disabled{ opacity:0.4; cursor:not-allowed; }
-  .server-opt .server-left{ display:flex; align-items:center; gap:10px; }
-  .server-opt .server-name{ font-size:14px; color: var(--text); font-weight:600; }
-  .server-opt .server-status{ display:flex; align-items:center; gap:6px; font-size:12px; color: var(--muted); }
-  .server-dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
-  .server-dot.on{ background: var(--good); box-shadow:0 0 6px var(--good); }
-  .server-dot.off{ background: var(--bad); }
-  .server-picker-loading{ font-size:12px; color: var(--muted); font-family:'IBM Plex Mono', monospace; }
+  .select-row::after{
+    content: '';
+    position:absolute; right:14px; top:50%; transform:translateY(-50%);
+    width:0; height:0;
+    border-left:5px solid transparent;
+    border-right:5px solid transparent;
+    border-top:6px solid var(--muted);
+    pointer-events:none;
+  }
+  select#serverSelect{
+    width:100%;
+    appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 15px;
+    padding: 13px 34px 13px 14px;
+  }
+  select#serverSelect option{ background: var(--bg-panel); color: var(--text); }
+  select#serverSelect option:disabled{ color: var(--muted); }
+  .server-picker-loading{ font-size:12px; color: var(--muted); font-family:'IBM Plex Mono', monospace; padding: 13px 14px; }
 
   button.primary{
     width:100%;
@@ -562,7 +572,7 @@
 
     <div class="server-picker">
       <label id="i18nServerLabel">Chwazi sèvè</label>
-      <div class="server-list" id="serverList">
+      <div class="select-row" id="serverRow">
         <div class="server-picker-loading" id="serverLoading">Ap chaje sèvè yo...</div>
       </div>
     </div>
@@ -812,39 +822,36 @@
 
   let selectedServer = null;
   let lastServersData = null;
-  const serverList = document.getElementById('serverList');
+  const serverRow = document.getElementById('serverRow');
 
   function renderServers(){
     if (!lastServersData) return;
     const t = translations[currentLang];
 
     if (!lastServersData.length) {
-      serverList.innerHTML = `<div class="server-picker-loading">${t.serverNone}</div>`;
+      serverRow.innerHTML = `<div class="server-picker-loading">${t.serverNone}</div>`;
       return;
     }
 
-    serverList.innerHTML = lastServersData.map(s => {
+    if (selectedServer == null) {
+      const firstAvailable = lastServersData.find(s => s.online && !(s.max != null && s.count >= s.max));
+      if (firstAvailable) selectedServer = firstAvailable.id;
+    }
+
+    const options = lastServersData.map(s => {
       const full = s.online && s.max != null && s.count >= s.max;
       const disabled = !s.online || full;
       const statusText = !s.online ? t.serverOffline : full ? t.serverFull : `${s.count}/${s.max}`;
       const isSelected = selectedServer === s.id;
-      return `
-        <div class="server-opt ${disabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''}"
-             data-id="${s.id}" ${disabled ? '' : `onclick="selectServer(${s.id})"`}>
-          <div class="server-left">
-            <span class="server-dot ${s.online ? 'on' : 'off'}"></span>
-            <span class="server-name">${s.label}</span>
-          </div>
-          <span class="server-status">${statusText}</span>
-        </div>`;
+      return `<option value="${s.id}" ${disabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''}>${s.label} — ${statusText}</option>`;
     }).join('');
-  }
 
-  window.selectServer = function(id){
-    selectedServer = id;
-    renderServers();
-    loadStats();
-  };
+    serverRow.innerHTML = `<select id="serverSelect">${options}</select>`;
+    document.getElementById('serverSelect').addEventListener('change', (e) => {
+      selectedServer = Number(e.target.value);
+      loadStats();
+    });
+  }
 
   async function loadServers(){
     try {
