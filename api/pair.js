@@ -1,50 +1,35 @@
-// Vercel serverless function — jis yon "relè" (proxy).
-// Li pa fè travay pairing la limenm (Vercel pa ka kenbe koneksyon Baileys louvri),
-// li jis pran rekèt moun nan epi voye l bay VPS Pterodactyl la ki gen vrè
-// koneksyon WhatsApp/Baileys la ap kouri sou li.
+// api/pair.js
+// Voye demand pairing an DIREKTEMAN bay sèvè moun nan CHWAZI a
+// (pa gen otomatik chwazi — moun nan deside).
 
-const VPS_URL = process.env.VPS_PAIR_URL || 'http://185.214.134.21:8009/api/pair';
+const SERVERS = {
+  1: process.env.NYXEN_SERVER_1,
+  2: process.env.NYXEN_SERVER_2,
+  3: process.env.NYXEN_SERVER_3,
+};
 
 module.exports = async (req, res) => {
-  // Sèlman aksepte POST
   if (req.method !== 'POST') {
-    res.status(405).json({ success: false, error: 'Method not allowed' });
-    return;
+    return res.status(405).json({ success: false, error: 'Method not allowed' });
+  }
+
+  const { number, server } = req.body || {};
+  const target = SERVERS[server];
+
+  if (!target) {
+    return res.json({ success: false, error: 'Chwazi yon sèvè (1, 2, oswa 3) anvan.' });
   }
 
   try {
-    const { number } = req.body || {};
-
-    if (!number) {
-      res.status(400).json({ success: false, error: 'Antre yon nimewo dabò.' });
-      return;
-    }
-
-    // Relaye rekèt la bay VPS la, ak yon timeout pou pa rete bloke
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 25000);
-
-    const vpsResponse = await fetch(VPS_URL, {
+    const upstream = await fetch(`${target}/api/pair`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ number }),
-      signal: controller.signal
+      signal: AbortSignal.timeout(25000),
     });
-
-    clearTimeout(timeout);
-
-    const data = await vpsResponse.json();
-    res.status(200).json(data);
-
+    const data = await upstream.json();
+    return res.json(data);
   } catch (err) {
-    console.error('[Vercel proxy] Erreur relay pair:', err);
-
-    const isTimeout = err.name === 'AbortError';
-    res.status(502).json({
-      success: false,
-      error: isTimeout
-        ? 'Sèvè a pran twòp tan pou reponn. Eseye ankò.'
-        : 'Pa t rive konekte ak sèvè bot la. Eseye ankò nan yon ti moman.'
-    });
+    return res.json({ success: false, error: `Sèvè ${server} pa reponn kounye a. Eseye yon lòt sèvè.` });
   }
 };
