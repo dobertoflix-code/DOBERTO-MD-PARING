@@ -1,11 +1,10 @@
 // api/pair.js
-// Voye demand pairing an DIREKTEMAN bay sèvè moun nan CHWAZI a
-// (pa gen otomatik chwazi — moun nan deside).
+// Voye demand pairing an DIREKTEMAN bay sèvè moun nan CHWAZI a.
 
 const SERVERS = {
-  1: process.env.NYXEN_SERVER_1,
-  2: process.env.NYXEN_SERVER_2,
-  3: process.env.NYXEN_SERVER_3,
+  1: process.env.DOBERTO_SERVER_1,
+  2: process.env.DOBERTO_SERVER_2,
+  3: process.env.DOBERTO_SERVER_3,
 };
 
 module.exports = async (req, res) => {
