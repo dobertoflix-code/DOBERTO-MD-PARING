@@ -784,8 +784,6 @@
     if (btn) applyLanguage(btn.dataset.lang);
   });
 
-  applyLanguage('HT');
-
   const form = document.getElementById('pairForm');
   const phoneInput = document.getElementById('phone');
   const submitBtn = document.getElementById('submitBtn');
@@ -864,6 +862,8 @@
     renderServers();
     loadStats();
   }
+
+  applyLanguage('HT');
   loadServers();
   setInterval(loadServers, 15000);
 
